@@ -1,0 +1,58 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.2-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-labuser}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-labpass}
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build: .
+    environment:
+      PORT: 3000
+      AMQP_URL: amqp://${RABBITMQ_USER:-labuser}:${RABBITMQ_PASSWORD:-labpass}@rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+
+  worker:
+    build: .
+    command: ["node", "src/worker.js"]
+    environment:
+      AMQP_URL: amqp://${RABBITMQ_USER:-labuser}:${RABBITMQ_PASSWORD:-labpass}@rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+      JOB_DURATION_MS: ${JOB_DURATION_MS:-4000}
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+
+volumes:
+  rabbitmq_data:
+  redis_data:

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c1120">
+  <title>AsyncFlow | Distributed Jobs Laboratory</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="AsyncFlow home"><span class="brand-mark">◆</span><span>async<span class="brand-accent">flow</span></span><span class="brand-tag">LAB</span></a>
+      <div class="topright"><span class="system-indicator" id="system-indicator"></span><span id="connection-status">Connecting to services</span><span class="version">v1.0</span></div>
+    </header>
+    <main>
+      <section class="hero">
+        <div>
+          <div class="eyebrow"><span class="dot"></span> DISTRIBUTED SYSTEMS WORKBENCH <span class="eyebrow-line"></span> AD371 · WEEK 06</div>
+          <h1>Async processing,<br><span>made observable.</span></h1>
+          <p>Submit work through REST. Watch RabbitMQ buffer the load. Observe how durable messages, manual acknowledgments, and independent workers keep processing resilient.</p>
+        </div>
+        <div class="hero-visual" aria-label="Message flow: API, RabbitMQ, Worker, Redis">
+          <div class="flow-node"><span>01</span><strong>REST API</strong><small>HTTP 202</small></div>
+          <div class="flow-wire"><span>→</span></div>
+          <div class="flow-node flow-node-primary"><span>02</span><strong>RABBITMQ</strong><small>Durable buffer</small></div>
+          <div class="flow-wire"><span>→</span></div>
+          <div class="flow-node"><span>03</span><strong>WORKER</strong><small>ACK / NACK</small></div>
+          <div class="flow-subtitle">Redis persists job lifecycle · Failed messages route to DLQ</div>
+        </div>
+      </section>
+
+      <section class="metrics" aria-label="Live system metrics">
+        <article class="metric"><span class="metric-label">READY MESSAGES</span><div class="metric-value" id="metric-queued">—</div><span class="metric-foot">Awaiting consumer pickup</span></article>
+        <article class="metric"><span class="metric-label">ACTIVE CONSUMERS</span><div class="metric-value" id="metric-consumers">—</div><span class="metric-foot">RabbitMQ subscriptions</span></article>
+        <article class="metric"><span class="metric-label">COMPLETED</span><div class="metric-value accent-cyan" id="metric-completed">—</div><span class="metric-foot">Last 50 submissions</span></article>
+        <article class="metric"><span class="metric-label">DEAD-LETTER QUEUE</span><div class="metric-value accent-red" id="metric-dlq">—</div><span class="metric-foot">Failed / poison payloads</span></article>
+      </section>
+
+      <div class="workspace">
+        <section class="panel create-panel">
+          <div class="panel-heading"><div><span class="kicker">PRODUCER INTERFACE</span><h2>Dispatch a job</h2></div><span class="panel-icon">↗</span></div>
+          <p class="panel-caption">The API validates input, publishes a durable message, and responds immediately with a job ID.</p>
+          <form id="job-form">
+            <label for="job-name">JOB LABEL</label>
+            <input id="job-name" name="name" type="text" minlength="3" maxlength="80" placeholder="e.g. Generate analytics report" value="Generate analytics report" required>
+            <label for="job-kind">PROCESSING SCENARIO</label>
+            <select id="job-kind" name="kind">
+              <option value="normal">Normal processing · 4 seconds</option>
+              <option value="flaky">Transient failure · NACK + retry</option>
+              <option value="poison">Poison message · send to DLQ</option>
+            </select>
+            <button class="btn primary" type="submit" id="submit-button"><span>↗</span> Send job <span class="button-trailing">POST /api/jobs</span></button>
+          </form>
+          <div class="submit-result" id="submit-result" role="status" aria-live="polite">Ready to publish. No work will block the HTTP response.</div>
+          <div class="divider"></div>
+          <div class="utility-header"><div><span class="kicker">LOAD TEST</span><h3>Simulate a traffic burst</h3></div></div>
+          <p class="panel-caption">Publish five jobs rapidly. With a worker prefetch of one, queued work should accumulate and drain steadily.</p>
+          <button class="btn secondary" id="burst-button" type="button"><span>≋</span> Send five jobs <span class="button-trailing">BURST × 5</span></button>
+          <div class="hint"><span class="hint-icon">i</span> For crash recovery, stop the worker using Docker while this dashboard remains open.</div>
+        </section>
+
+        <section class="panel activity-panel">
+          <div class="panel-heading"><div><span class="kicker">LIVE STATUS STORE</span><h2>Job activity</h2></div><div class="refresh-pill"><span class="refresh-dot"></span> Auto-polling · 1.2s</div></div>
+          <div class="activity-tools"><span>Recent submissions</span><button class="mini-button" type="button" id="refresh-button">↻ Refresh now</button></div>
+          <div class="activity-list" id="job-list"><div class="empty-state"><div class="empty-symbol">◈</div><strong>Awaiting your first job</strong><p>Submit a job to see its queued, processing, and completed transitions.</p></div></div>
+          <div class="panel-bottom"><span>Statuses: queued → processing → completed</span><span>GET /api/jobs</span></div>
+        </section>
+      </div>
+      <footer><span>AsyncFlow · REST + RabbitMQ + Redis</span><span>At-least-once delivery · Manual ACK · Dead-letter routing</span></footer>
+    </main>
+  </div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

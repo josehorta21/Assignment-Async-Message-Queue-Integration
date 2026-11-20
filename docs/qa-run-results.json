@@ -1,0 +1,67 @@
+{
+  "startedAt": "2026-11-20T02:01:11.492Z",
+  "destructive": false,
+  "checks": [
+    {
+      "name": "API, Redis and RabbitMQ healthy",
+      "status": "passed",
+      "health": {
+        "ok": true,
+        "broker": "connected",
+        "statusStore": "connected",
+        "queue": 0
+      }
+    },
+    {
+      "name": "POST returns 202 and unique job ID",
+      "status": "passed",
+      "code": 202,
+      "id": "4047b680-3f48-4bed-b24e-6b25a6f2238d"
+    },
+    {
+      "name": "Measured HTTP 202 latency below 100 ms",
+      "status": "passed",
+      "measuredMs": 17,
+      "targetMs": 100
+    },
+    {
+      "name": "Polling observes completed state",
+      "status": "passed",
+      "attempts": 1
+    },
+    {
+      "name": "Five jobs published concurrently",
+      "status": "passed",
+      "count": 5
+    },
+    {
+      "name": "RabbitMQ buffered pending jobs",
+      "status": "passed",
+      "queued": 4
+    },
+    {
+      "name": "Burst drained without lost jobs",
+      "status": "passed",
+      "completed": 5
+    },
+    {
+      "name": "Transient failure NACK/requeue was handled",
+      "status": "passed",
+      "attempts": 2
+    },
+    {
+      "name": "Poison payload failed and reached DLQ",
+      "status": "passed",
+      "before": 0,
+      "after": 1
+    },
+    {
+      "name": "Worker isolation, restart and SIGKILL recovery",
+      "status": "skipped",
+      "instruction": "Run with RUN_DESTRUCTIVE_QA=1 to perform Docker worker lifecycle tests."
+    }
+  ],
+  "finishedAt": "2026-11-20T02:01:40.024Z",
+  "passed": true,
+  "complete": false
+}

@@ -1,0 +1,15 @@
+flowchart LR
+    U[Web Dashboard / curl] -->|POST /api/jobs · HTTP| A[Express REST API]
+    A -->|202 Accepted + Job ID| U
+    A -->|AMQP publish · persistent message| Q[(RabbitMQ durable queue)]
+    A <-->|HSET / HGETALL job status| R[(Redis + AOF)]
+    Q -->|Push delivery · prefetch 1| W[Background Worker]
+    W -->|Save processing/completed| R
+    W -->|ACK after success| Q
+    W -->|NACK + requeue transient| Q
+    Q -->|NACK · requeue false via DLX| DLQ[(Dead-Letter Queue)]
+    U -->|GET /api/jobs/:id polling| A
+    classDef service fill:#193047,stroke:#48bedb,color:#ebf5ff;
+    classDef store fill:#203c31,stroke:#69dbac,color:#ebf5ff;
+    class A,W service;
+    class Q,DLQ,R store;

@@ -1,0 +1,8 @@
+node_modules
+.git
+*.zip
+*.pdf
+docs
+scripts
+tests
+.env

@@ -1,0 +1,19 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="#0c1423", pad="0.45", nodesep="0.6", ranksep="1.05", fontname="Helvetica", fontcolor="#dfefff", label="AsyncFlow  •  Durable Asynchronous Processing", fontsize=23, labelloc=t];
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=15, penwidth=1.4, fontcolor="#e7f2ff", margin="0.27,0.21"];
+  edge [fontname="Helvetica", fontsize=10, color="#70accb", fontcolor="#acd9eb", penwidth=1.8, arrowsize=0.8];
+  client [label="WEB CLIENT\nsubmit + status poll", fillcolor="#17273e", color="#466783"];
+  api [label="EXPRESS API\nPOST /api/jobs\nGET /api/jobs/:id", fillcolor="#17394e", color="#54c7e4"];
+  mq [label="RABBITMQ\ndurable queue\npersistent messages", fillcolor="#173b42", color="#6fe4d2", shape=cylinder];
+  worker [label="WORKER\nprefetch = 1\nmanual ACK / NACK", fillcolor="#17394e", color="#54c7e4"];
+  redis [label="REDIS + AOF\njob statuses\nattempt counter", fillcolor="#28382e", color="#71d8a3", shape=cylinder];
+  dlq [label="DEAD-LETTER QUEUE\npoison / failed payloads", fillcolor="#432736", color="#f5869b", shape=cylinder];
+  client -> api [label="HTTP POST / GET"];
+  api -> client [label="202 + Job ID", color="#56e3ca", constraint=false];
+  api -> mq [label="AMQP publish\nconfirm + persistent"];
+  mq -> worker [label="deliver when available"];
+  worker -> mq [label="ACK / NACK (requeue)", color="#e5bd81", constraint=false];
+  worker -> redis [label="write final status\nbefore ACK"];
+  api -> redis [label="create / poll state", constraint=false];
+  mq -> dlq [label="NACK(false) → DLX", color="#ec8b9a"];
+}
